@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
 
-export default function TranslatorDashboard({ globalOrders, setGlobalOrders, currentUser }: { globalOrders: any[], setGlobalOrders: any, currentUser: any }) {
+export default function TranslatorDashboard({ globalOrders, setGlobalOrders }: { globalOrders: any[], setGlobalOrders: any }) {
   const [activeTab, setActiveTab] = useState('new_manual');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   
   // State to hold the two separate file uploads per order
   const [uploadStates, setUploadStates] = useState<{[key:string]: {orig: File|null, word: File|null}}>({});
 
+  // Filter the global database to find orders relevant to translators
   const newOrders = globalOrders.filter(order => order.status === 'Awaiting Translator');
   const inProgressOrders = globalOrders.filter(order => order.status === 'In Progress');
   const aiReviewQueue = globalOrders.filter(order => order.status === 'AI Review');
   const manualFixQueue = globalOrders.filter(order => order.status === 'Manual Fix Needed');
+
+  const handleDownload = (fileName: string) => {
+    alert(`Downloading secure cloud file: ${fileName}`);
+  };
+
+  const handlePreview = (fileName: string) => {
+    alert(`Opening secure browser preview for: ${fileName}`);
+  };
 
   const handleFileSelect = (orderId: string, type: 'orig' | 'word', file: File) => {
     setUploadStates(prev => ({
@@ -22,20 +32,9 @@ export default function TranslatorDashboard({ globalOrders, setGlobalOrders, cur
   };
 
   const claimOrder = (orderId: string) => {
-    const updatedOrders = globalOrders.map(order => {
-      if(order.id === orderId) {
-        return { 
-          ...order, 
-          status: 'In Progress',
-          history: [...order.history, {
-            step: 'Order Claimed',
-            timestamp: new Date().toLocaleString(),
-            details: `${currentUser.name} claimed the order and began translation.`
-          }]
-        };
-      }
-      return order;
-    });
+    const updatedOrders = globalOrders.map(order => 
+       order.id === orderId ? { ...order, status: 'In Progress' } : order
+    );
     setGlobalOrders(updatedOrders);
   };
 
@@ -43,22 +42,30 @@ export default function TranslatorDashboard({ globalOrders, setGlobalOrders, cur
     const files = uploadStates[orderId];
     if(!files || !files.orig || !files.word) return;
 
+    // Local variables satisfy TypeScript strict type-checking
+    const origName = files.orig.name;
+    const wordName = files.word.name;
+
     const updatedOrders = globalOrders.map(order => {
-      if(order.id === orderId) {
-        return { 
-          ...order, 
-          status: 'Ready to Print', 
-          translatorOrigFile: files.orig.name,
-          translatorWordFile: files.word.name,
-          history: [...order.history, {
-            step: 'Translated & Marked Finished',
-            timestamp: new Date().toLocaleString(),
-            details: `${currentUser.name} uploaded original PDF (${files.orig.name}) and Word Doc (${files.word.name}). Sent to Front Desk.`
-          }]
-        };
-      }
-      return order;
+       if(order.id === orderId) {
+         return { 
+           ...order, 
+           status: 'Ready to Print', 
+           translatorOrigFile: origName,
+           translatorWordFile: wordName,
+           history: [
+             ...order.history, 
+             {
+               step: 'Translated & Marked Finished',
+               timestamp: new Date().toLocaleString(),
+               details: `Uploaded modified PDF (${origName}) and Word Doc (${wordName}). Sent to Front Desk.`
+             }
+           ]
+         };
+       }
+       return order;
     });
+
     setGlobalOrders(updatedOrders);
     
     // Clear upload state for this order
@@ -67,6 +74,8 @@ export default function TranslatorDashboard({ globalOrders, setGlobalOrders, cur
       delete newState[orderId];
       return newState;
     });
+    
+    setActiveTab('new_manual');
   };
 
   return (
@@ -76,7 +85,9 @@ export default function TranslatorDashboard({ globalOrders, setGlobalOrders, cur
           <li>
             <button
               onClick={() => setActiveTab('new_manual')}
-              className={`w-full text-left py-3 px-4 font-bold flex justify-between items-center ${activeTab === 'new_manual' ? 'bg-red-50 text-red-900 border-l-4 border-yellow-500' : 'text-gray-600 hover:bg-gray-50 transition'}`}
+              className={`w-full text-left py-3 px-4 font-bold flex justify-between items-center ${
+                activeTab === 'new_manual' ? 'bg-red-50 text-red-900 border-l-4 border-yellow-500' : 'text-gray-600 hover:bg-gray-50 transition'
+              }`}
             >
               <span>New Manual Orders</span>
               <span className="bg-red-800 text-white text-xs px-2 py-1 rounded-full">{newOrders.length}</span>
@@ -85,20 +96,32 @@ export default function TranslatorDashboard({ globalOrders, setGlobalOrders, cur
           <li>
             <button
               onClick={() => setActiveTab('working')}
-              className={`w-full text-left py-3 px-4 font-bold flex justify-between items-center ${activeTab === 'working' ? 'bg-red-50 text-red-900 border-l-4 border-yellow-500' : 'text-gray-600 hover:bg-gray-50 transition'}`}
+              className={`w-full text-left py-3 px-4 font-bold flex justify-between items-center ${
+                activeTab === 'working' ? 'bg-red-50 text-red-900 border-l-4 border-yellow-500' : 'text-gray-600 hover:bg-gray-50 transition'
+              }`}
             >
               <span>In Progress</span>
               <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">{inProgressOrders.length}</span>
             </button>
           </li>
           <li>
-            <button onClick={() => setActiveTab('ai')} className={`w-full text-left py-3 px-4 font-bold flex justify-between items-center ${activeTab === 'ai' ? 'bg-red-50 text-red-900 border-l-4 border-yellow-500' : 'text-gray-600 hover:bg-gray-50 transition'}`}>
+            <button
+              onClick={() => setActiveTab('ai')}
+              className={`w-full text-left py-3 px-4 font-bold flex justify-between items-center ${
+                activeTab === 'ai' ? 'bg-red-50 text-red-900 border-l-4 border-yellow-500' : 'text-gray-600 hover:bg-gray-50 transition'
+              }`}
+            >
               <span>AI Review Queue</span>
               <span className="bg-slate-300 text-slate-800 text-xs px-2 py-1 rounded-full">{aiReviewQueue.length}</span>
             </button>
           </li>
           <li>
-            <button onClick={() => setActiveTab('manual')} className={`w-full text-left py-3 px-4 font-bold flex justify-between items-center ${activeTab === 'manual' ? 'bg-red-50 text-red-900 border-l-4 border-yellow-500' : 'text-gray-600 hover:bg-gray-50 transition'}`}>
+            <button
+              onClick={() => setActiveTab('manual')}
+              className={`w-full text-left py-3 px-4 font-bold flex justify-between items-center ${
+                activeTab === 'manual' ? 'bg-red-50 text-red-900 border-l-4 border-yellow-500' : 'text-gray-600 hover:bg-gray-50 transition'
+              }`}
+            >
               <span>Needs Manual Fix</span>
               <span className="bg-gray-300 text-gray-700 text-xs px-2 py-1 rounded-full">{manualFixQueue.length}</span>
             </button>
@@ -123,7 +146,7 @@ export default function TranslatorDashboard({ globalOrders, setGlobalOrders, cur
                     <div className="flex justify-between items-start border-b pb-4 mb-4">
                       <div>
                          <h4 className="font-black text-gray-800 text-xl">{order.type} - Order #{order.id}</h4>
-                         <p className="text-sm text-gray-500 mt-1 font-bold">Customer: {order.customer}</p>
+                         <p className="text-sm text-gray-500 mt-1 font-bold">Customer: {order.customer} | Phone: {order.phone}</p>
                       </div>
                       <span className="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full border border-gray-200">Awaiting Translator</span>
                     </div>
@@ -139,17 +162,28 @@ export default function TranslatorDashboard({ globalOrders, setGlobalOrders, cur
                       </div>
                     </div>
 
-                    <div className="flex gap-4 mb-6">
-                      <button className="flex-1 bg-white border border-gray-300 text-slate-800 hover:bg-slate-50 font-bold py-2 rounded-lg transition shadow-sm text-sm">
-                        📄 Download Main File: {order.mainFileName}
-                      </button>
-                      <button className="flex-1 bg-white border border-gray-300 text-slate-800 hover:bg-slate-50 font-bold py-2 rounded-lg transition shadow-sm text-sm">
-                        🪪 Download ID/Passport: {order.referenceFileName}
-                      </button>
+                    <div className="space-y-3 mb-6">
+                      <div className="flex justify-between items-center bg-gray-50 p-3 border border-gray-200 rounded-lg">
+                        <span className="text-sm font-bold text-gray-800">📄 Main File: {order.mainFileName}</span>
+                        <div className="flex gap-2">
+                          <button onClick={() => handlePreview(order.mainFileName)} className="bg-white border border-gray-300 text-slate-800 hover:bg-slate-100 font-bold px-3 py-1 rounded text-xs shadow-sm">Preview</button>
+                          <button onClick={() => handleDownload(order.mainFileName)} className="bg-red-800 text-white font-bold px-3 py-1 rounded text-xs shadow-sm">Download</button>
+                        </div>
+                      </div>
+
+                      {order.referenceFileName !== 'None provided' && (
+                        <div className="flex justify-between items-center bg-gray-50 p-3 border border-gray-200 rounded-lg">
+                          <span className="text-sm font-bold text-gray-800">🪪 ID/Passport: {order.referenceFileName}</span>
+                          <div className="flex gap-2">
+                            <button onClick={() => handlePreview(order.referenceFileName)} className="bg-white border border-gray-300 text-slate-800 hover:bg-slate-100 font-bold px-3 py-1 rounded text-xs shadow-sm">Preview</button>
+                            <button onClick={() => handleDownload(order.referenceFileName)} className="bg-red-800 text-white font-bold px-3 py-1 rounded text-xs shadow-sm">Download</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    
+                                        
                     <button onClick={() => claimOrder(order.id)} className="w-full bg-red-800 hover:bg-red-900 text-white font-bold py-4 rounded-xl shadow-md transition text-lg uppercase tracking-wide">
-                      ✅ Claim Order & Move to In Progress
+                        Claim Order & Move to In Progress
                     </button>
                  </div>
                ))
@@ -174,26 +208,17 @@ export default function TranslatorDashboard({ globalOrders, setGlobalOrders, cur
                  return (
                  <div key={order.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 border-t-4 border-t-yellow-500">
                    <div className="flex justify-between items-start mb-4">
-                     <div>
-                        <h4 className="font-bold text-gray-800 text-xl">{order.type} - Order #{order.id}</h4>
-                        <p className="text-sm text-yellow-600 font-bold mt-1">Status: Translating...</p>
-                     </div>
-                   </div>
-
-                   <div className="flex gap-4 mb-6">
-                      <button className="flex-1 bg-slate-100 border border-slate-300 text-slate-800 hover:bg-slate-200 font-bold py-2 rounded-lg transition text-sm">
-                        ⬇️ Download Main: {order.mainFileName}
-                      </button>
-                      <button className="flex-1 bg-slate-100 border border-slate-300 text-slate-800 hover:bg-slate-200 font-bold py-2 rounded-lg transition text-sm">
-                        ⬇️ Download ID: {order.referenceFileName}
-                      </button>
+                      <div>
+                         <h4 className="font-bold text-gray-800 text-xl">{order.type} - Order #{order.id}</h4>
+                         <p className="text-sm text-yellow-600 font-bold mt-1">Status: Translating...</p>
+                      </div>
+                      <button onClick={() => handleDownload(order.mainFileName)} className="text-sm font-bold text-blue-600 hover:underline">Re-download Source Files</button>
                    </div>
                    
                    <div className="bg-gray-50 border border-gray-200 p-6 rounded-xl mt-4 text-center">
                       <h5 className="font-bold text-gray-800 mb-4 uppercase tracking-wider text-sm border-b pb-2">Upload Finished Translations</h5>
                       
                       <div className="grid grid-cols-2 gap-4">
-                        {/* Upload Original/PDF */}
                         <div className="relative border-2 border-dashed border-gray-300 rounded-xl p-6 bg-white hover:border-red-400 cursor-pointer transition">
                           <input type="file" accept=".pdf" onChange={(e: any) => handleFileSelect(order.id, 'orig', e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                           {orderUploads.orig ? (
@@ -206,7 +231,6 @@ export default function TranslatorDashboard({ globalOrders, setGlobalOrders, cur
                           )}
                         </div>
 
-                        {/* Upload Word Doc */}
                         <div className="relative border-2 border-dashed border-gray-300 rounded-xl p-6 bg-white hover:border-red-400 cursor-pointer transition">
                           <input type="file" accept=".doc,.docx" onChange={(e: any) => handleFileSelect(order.id, 'word', e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                           {orderUploads.word ? (
@@ -242,6 +266,7 @@ export default function TranslatorDashboard({ globalOrders, setGlobalOrders, cur
             </div>
           </div>
         )}
+        
         {activeTab === 'manual' && (
           <div>
             <h2 className="text-3xl font-black text-gray-800 mb-6">Manual Fixes Required</h2>
