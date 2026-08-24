@@ -48,8 +48,8 @@ export default function TranslatorDashboard({ globalOrders, setGlobalOrders, cur
         return { 
           ...order, 
           status: 'Ready to Print', 
-          translatorOrigFile: files.orig!.name,
-          translatorWordFile: files.word!.name,
+          translatorOrigFile: files.orig.name,
+          translatorWordFile: files.word.name,
           history: [...order.history, {
             step: 'Translated & Marked Finished',
             timestamp: new Date().toLocaleString(),
