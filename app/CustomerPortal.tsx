@@ -23,13 +23,14 @@ export default function CustomerPortal({
   const [paymentMethod, setPaymentMethod] = useState('Card');
   const [wantsPrint, setWantsPrint] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  
   const [exactNames, setExactNames] = useState('');
   const [additionalDetails, setAdditionalDetails] = useState('');
   const [referenceFile, setReferenceFile] = useState<File | null>(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   let currentPrice = documentPrices[docType] || 50;
-
   if (language === 'Other (French, Spanish, etc.)') {
     currentPrice += 50;
   }
@@ -52,6 +53,7 @@ export default function CustomerPortal({
       alert('Please upload the main document you want translated.');
       return;
     }
+
     setIsSubmitting(true);
     
     const newOrder = {
@@ -67,7 +69,7 @@ export default function CustomerPortal({
       exactNamesProvided: exactNames,
       additionalNotes: additionalDetails,
       price: currentPrice,
-      date: new Date().toISOString(),
+      date: new Date().toISOString(), // Full ISO string for accurate reports
       status: 'Awaiting Translator',
       history: [
         {
@@ -109,6 +111,7 @@ export default function CustomerPortal({
           Staff Login
         </button>
       </header>
+
       <div className="flex-1 max-w-4xl w-full mx-auto py-12 px-6">
         <div className="text-center mb-10">
           <h2 className="text-4xl font-black text-gray-900 mb-3">
@@ -118,11 +121,13 @@ export default function CustomerPortal({
             Fast, certified, and fully secure cloud processing.
           </p>
         </div>
+
         <div className="bg-white border border-gray-200 p-8 rounded-2xl shadow-xl border-t-4 border-t-red-800">
           <h2 className="text-2xl font-bold mb-8 text-gray-800 border-b pb-4">
             Start Your Order
           </h2>
           <form className="space-y-8" onSubmit={handleSubmit}>
+            
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
               <h3 className="font-bold text-gray-800 mb-4 uppercase tracking-wider text-sm">1. Contact Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -150,6 +155,7 @@ export default function CustomerPortal({
                 </div>
               </div>
             </div>
+
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
               <h3 className="font-bold text-gray-800 mb-4 uppercase tracking-wider text-sm">2. Document Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -182,13 +188,15 @@ export default function CustomerPortal({
                 </div>
               </div>
             </div>
+
             <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
               <h3 className="font-bold text-blue-900 mb-2 uppercase tracking-wider text-sm">3. Ensure Perfect Accuracy (Optional)</h3>
               <p className="text-sm text-blue-700 mb-4">To ensure names are spelled exactly as they appear on your official records, please provide them below or upload an ID/Passport.</p>
+              
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-bold mb-1 text-blue-900">Exact Name Spellings (English/Arabic)</label>
-                  <textarea
+                  <textarea 
                     rows={2}
                     value={exactNames}
                     onChange={(e) => setExactNames(e.target.value)}
@@ -196,12 +204,13 @@ export default function CustomerPortal({
                     placeholder="e.g. My name in English must be spelled: Abdullah Al-Ghamdi"
                   ></textarea>
                 </div>
+                
                 <div>
                   <label className="block text-sm font-bold mb-1 text-blue-900">Upload Reference ID/Passport (Image or PDF)</label>
                   <div className="relative border-2 border-dashed border-blue-300 rounded-lg p-4 text-center bg-white hover:bg-blue-100 transition cursor-pointer">
                     <input type="file" accept=".pdf, image/*" onChange={handleReferenceUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     {referenceFile ? (
-                      <span className="text-green-600 font-bold block"> Attached: {referenceFile.name}</span>
+                      <span className="text-green-600 font-bold block">✅ Attached: {referenceFile.name}</span>
                     ) : (
                       <span className="text-blue-800 font-bold text-sm">Click to upload Passport or ID copy</span>
                     )}
@@ -209,6 +218,7 @@ export default function CustomerPortal({
                 </div>
               </div>
             </div>
+
             <div>
               <label className="block text-sm font-black mb-2 text-gray-800 uppercase tracking-wide">
                 4. Upload Document for Translation <span className="text-red-600">*</span>
@@ -223,7 +233,7 @@ export default function CustomerPortal({
                 />
                 {!file ? (
                   <>
-                    <span className="text-4xl block mb-3"> </span>
+                    <span className="text-4xl block mb-3">📄</span>
                     <span className="text-red-800 font-black block mb-2 text-xl">
                       Click to Select PDF or Image
                     </span>
@@ -233,14 +243,15 @@ export default function CustomerPortal({
                   </>
                 ) : (
                   <span className="text-green-600 font-black block text-xl">
-                      File Ready: {file.name}
+                    ✅ File Ready: {file.name}
                   </span>
                 )}
               </div>
             </div>
+
             <div>
               <label className="block text-sm font-bold mb-1 text-gray-700">Any special requests or instructions for the translator?</label>
-              <textarea
+              <textarea 
                 rows={3}
                 value={additionalDetails}
                 onChange={(e) => setAdditionalDetails(e.target.value)}
@@ -248,12 +259,13 @@ export default function CustomerPortal({
                 placeholder="Type any extra notes here..."
               ></textarea>
             </div>
+
             <div className="bg-gray-50 p-4 rounded-lg flex flex-col md:flex-row items-center justify-between border border-gray-200 gap-4">
               <div className="w-full md:w-auto">
                 <label className="block text-sm font-bold mb-2 text-gray-700">Payment Method</label>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+                <select 
+                  value={paymentMethod} 
+                  onChange={(e) => setPaymentMethod(e.target.value)} 
                   className="w-full md:w-64 border-2 border-gray-300 rounded-lg p-2 outline-none focus:border-red-800 bg-white font-medium"
                 >
                   <option value="Card">Credit / Debit Card</option>
@@ -275,6 +287,7 @@ export default function CustomerPortal({
                 </label>
               </div>
             </div>
+
             <div className="bg-yellow-50 p-6 rounded-xl flex items-center justify-between border-2 border-yellow-400">
               <div>
                 <h4 className="font-black text-yellow-900 uppercase tracking-widest text-sm mb-1">Total Order Price</h4>
@@ -284,6 +297,7 @@ export default function CustomerPortal({
                 {currentPrice} <span className="text-xl">SAR</span>
               </div>
             </div>
+
             <button
               disabled={isSubmitting}
               className="w-full bg-slate-900 hover:bg-black disabled:bg-gray-400 text-white font-black py-6 rounded-xl shadow-lg transition text-xl uppercase tracking-widest"
